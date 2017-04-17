@@ -65,7 +65,5 @@ if __name__ == "__main__":
         w.close()
         wt.close()
 
-    except ValueError as e:
-        print(e)
     except Exception as ex:
         print(ex)
