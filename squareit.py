@@ -9,6 +9,10 @@ BYTES = 0
 WAV_PCM_FORMATS = {'8': [1, 0, 128, 255], '16': [2, -32268, 0, 32767], '32': [4, -2147483648, 0, 2147483647]}
 
 
+def get_frame_value(frame):
+    return int.from_bytes(frame, byteorder='little', signed=True)
+
+
 def signal_analyze(wav_input_file, bits, channels):
     peak_list = [[] for declare in range(channels)]
     last_frame_value = [None] * channels
@@ -22,7 +26,7 @@ def signal_analyze(wav_input_file, bits, channels):
         for channel in range(0, channels):
             index = channel * 2
             frame_part = frame[index:index + WAV_PCM_FORMATS[bits][BYTES]]
-            current_frame_value[channel] = int.from_bytes(frame_part, byteorder='little', signed=True)
+            current_frame_value[channel] = get_frame_value(frame_part)
 
             if current_frame_value[channel] >= WAV_PCM_FORMATS[bits][MID]:
                 # High
@@ -100,7 +104,7 @@ if __name__ == "__main__":
                     index = channel * 2
                     frame_cmp = frame[index:index + WAV_PCM_FORMATS[selected_bits][BYTES]]
                     frame_tmp = bytearray()
-                    val_cmp[channel] = int.from_bytes(frame_cmp, byteorder='little', signed=True)
+                    val_cmp[channel] = get_frame_value(frame_cmp)
 
                     if val_cmp[channel] >= WAV_PCM_FORMATS[selected_bits][MID]:
                         current_position_from_middle[channel] = True
@@ -140,7 +144,7 @@ if __name__ == "__main__":
                     index = channel * 2
                     frame_cmp = frame[index:index + WAV_PCM_FORMATS[selected_bits][BYTES]]
                     frame_tmp = bytearray()
-                    val_cmp = int.from_bytes(frame_cmp, byteorder='little', signed=True)
+                    val_cmp = get_frame_value(frame_cmp)
                     if val_cmp > WAV_PCM_FORMATS[selected_bits][MID]:
                         val = WAV_PCM_FORMATS[selected_bits][MAX]
                         frame_tmp = val.to_bytes(WAV_PCM_FORMATS[selected_bits][BYTES], 'little', signed=True)
@@ -155,7 +159,7 @@ if __name__ == "__main__":
 
                     for byte in frame_tmp:
                         new_frame.append(byte)
-                        
+
                 wt.writeframes(new_frame)
 
         print("Transformation finished")
