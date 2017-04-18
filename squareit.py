@@ -155,6 +155,7 @@ if __name__ == "__main__":
 
                     for byte in frame_tmp:
                         new_frame.append(byte)
+                        
                 wt.writeframes(new_frame)
 
         print("Transformation finished")
