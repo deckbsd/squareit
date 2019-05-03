@@ -6,7 +6,7 @@ MID = 2
 MAX = 3
 BYTES = 0
 
-WAV_PCM_FORMATS = {'8': [1, 0, 128, 255], '16': [2, -32268, 0, 32767], '32': [4, -2147483648, 0, 2147483647]}
+WAV_PCM_FORMATS = {'8': [1, 0, 128, 255], '16': [2, -32268, 0, 32767], '24': [3, -8388608, 0,  8388607], '32': [4, -2147483648, 0, 2147483647]}
 
 
 def get_frame_value(frame):
@@ -63,7 +63,6 @@ def signal_analyze(wav_input_file, bits, channels):
 
 if __name__ == "__main__":
     try:
-
         parser = argparse.ArgumentParser(description='transform sinusoidal signal to square.')
         parser.add_argument('--input', '-i', dest='input_file', required=True,
                             help='the wave file containing the input data. (required)')
@@ -73,12 +72,29 @@ if __name__ == "__main__":
                             help='The number of bits per sample')
         parser.add_argument('--amplification', '-a', dest='amp', default=False,
                             help='Do an amplification of the signal. (no by default)')
+        parser.add_argument('--min', '-m', dest='min', default=None,
+                            help='min')
+        parser.add_argument('--mid', '-d', dest='mid', default=None,
+                            help='mid')
+        parser.add_argument('--max', '-x', dest='max', default=None,
+                            help='max')
         args = parser.parse_args()
 
         input_file = args.input_file
         output_file = args.output_file
         selected_bits = args.bits
         to_amp = args.amp
+        custom_min = False
+        custom_max = False
+        if args.min is not None:
+            WAV_PCM_FORMATS[selected_bits][MIN] = int(args.min)
+            custom_min = True
+        if args.mid is not None:
+            WAV_PCM_FORMATS[selected_bits][MID] = int(args.mid)
+        if args.max is not None:
+            WAV_PCM_FORMATS[selected_bits][MAX] = int(args.max)
+            custom_max = True
+
         w = wave.open(input_file, 'r')
         wt = wave.open(output_file, "w")
         print("Copy parameters ...")
@@ -119,11 +135,19 @@ if __name__ == "__main__":
                         peak_index[channel] += 1
 
                     if val_cmp[channel] > WAV_PCM_FORMATS[selected_bits][MID]:
-                        val = peaks[channel][peak_index[channel]]
+                        if custom_max :
+                            val =  WAV_PCM_FORMATS[selected_bits][MAX]
+                        else:
+                            val = peaks[channel][peak_index[channel]]
+                            
                         frame_tmp = val.to_bytes(WAV_PCM_FORMATS[selected_bits][BYTES], 'little', signed=True)
 
                     if val_cmp[channel] < WAV_PCM_FORMATS[selected_bits][MID]:
-                        val = peaks[channel][peak_index[channel]]
+                        if custom_min:
+                            val =  WAV_PCM_FORMATS[selected_bits][MIN]
+                        else:
+                            val = peaks[channel][peak_index[channel]]
+
                         frame_tmp = val.to_bytes(WAV_PCM_FORMATS[selected_bits][BYTES], 'little', signed=True)
 
                     if val_cmp[channel] == WAV_PCM_FORMATS[selected_bits][MID]:
